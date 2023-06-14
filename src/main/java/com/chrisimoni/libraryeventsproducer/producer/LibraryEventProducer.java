@@ -8,11 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
-import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
-import org.springframework.util.concurrent.ListenableFuture;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -42,7 +40,8 @@ public class LibraryEventProducer {
     }
 
     //Best approach
-    public void sendLibraryEvent2(LibraryEvent libraryEvent) throws JsonProcessingException {
+    //TO unit test this, change return type to CompletableFuture instead of void
+    public CompletableFuture<SendResult<Integer, String>> sendLibraryEvent2(LibraryEvent libraryEvent) throws JsonProcessingException {
         Integer key = libraryEvent.getLibraryEventId();
         String value = objectMapper.writeValueAsString(libraryEvent);
         ProducerRecord<Integer, String> producerRecord = buildProducerRecord(key, value, topic);
@@ -54,6 +53,8 @@ public class LibraryEventProducer {
                 handleSuccess(key, value, sendResult);
             }
         });
+
+        return completableFuture;
     }
 
     private ProducerRecord<Integer, String> buildProducerRecord(Integer key, String value, String topic) {
