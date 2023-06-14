@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
@@ -23,11 +24,12 @@ import java.util.concurrent.TimeUnit;
 public class LibraryEventProducer {
     private final KafkaTemplate<Integer, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    @Value("${spring.kafka.topic}")
+    public String topic;
 
-    String topic = "library-events";
 
     public void sendLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
-        Integer key = libraryEvent.getLibraryEventId();
+        Integer key = libraryEvent.libraryEventId();
         String value = objectMapper.writeValueAsString(libraryEvent);
         CompletableFuture<SendResult<Integer, String>> completableFuture = kafkaTemplate.sendDefault(key, value);
         completableFuture.whenComplete((sendResult, throwable) -> {
@@ -40,13 +42,15 @@ public class LibraryEventProducer {
     }
 
     //Best approach
-    //TO unit test this, change return type to CompletableFuture instead of void
+    //To unit test this, change return type to CompletableFuture instead of void
     public CompletableFuture<SendResult<Integer, String>> sendLibraryEvent2(LibraryEvent libraryEvent) throws JsonProcessingException {
-        Integer key = libraryEvent.getLibraryEventId();
+        Integer key = libraryEvent.libraryEventId();
         String value = objectMapper.writeValueAsString(libraryEvent);
         ProducerRecord<Integer, String> producerRecord = buildProducerRecord(key, value, topic);
+
         CompletableFuture<SendResult<Integer, String>> completableFuture = kafkaTemplate.send(producerRecord);
-        completableFuture.whenComplete((sendResult, throwable) -> {
+
+        return completableFuture.whenComplete((sendResult, throwable) -> {
             if (throwable != null) {
                 handleFailue(key, value, throwable);
             } else {
@@ -54,18 +58,17 @@ public class LibraryEventProducer {
             }
         });
 
-        return completableFuture;
     }
 
     private ProducerRecord<Integer, String> buildProducerRecord(Integer key, String value, String topic) {
-        //Sample of sending headers (need more clarity)
+        //Sample of sending headers if necessary (need more clarity)
         List<Header> recordHeaders = List.of(new RecordHeader("event-source", "scanner".getBytes()));
         return new ProducerRecord<>(topic, null, key, value, recordHeaders);
     }
 
     //For Synchronous call
     public SendResult<Integer, String> sendLibraryEventSynchronous(LibraryEvent libraryEvent) throws JsonProcessingException {
-        Integer key = libraryEvent.getLibraryEventId();
+        Integer key = libraryEvent.libraryEventId();
         String value = objectMapper.writeValueAsString(libraryEvent);
         SendResult<Integer, String> sendResult = null;
         try {

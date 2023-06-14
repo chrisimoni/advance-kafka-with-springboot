@@ -1,10 +1,11 @@
 package com.chrisimoni.libraryeventsproducer.intg.controller;
 
-import com.chrisimoni.libraryeventsproducer.domain.Book;
 import com.chrisimoni.libraryeventsproducer.domain.LibraryEvent;
-import lombok.RequiredArgsConstructor;
+import com.chrisimoni.libraryeventsproducer.util.TestUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.AfterEach;
@@ -20,7 +21,6 @@ import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,19 +32,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @TestPropertySource(properties = {
         "spring.kafka.producer.bootstrap-servers=${spring.embedded.kafka.brokers}",
         "spring.kafka.admin.properties.bootstrap-servers=${spring.embedded.kafka.brokers}"})
-public class LibraryEventControllerTest {
+public class LibraryEventControllerIntegrationTest {
     @Autowired
     TestRestTemplate restTemplate; //change to webTestClient later
-
     @Autowired
     EmbeddedKafkaBroker embeddedKafkaBroker;
+    @Autowired
+    ObjectMapper objectMapper;
 
     private Consumer<Integer, String> consumer;
 
     @BeforeEach
     void setUp() {
         Map<String, Object> configs = new HashMap<>(KafkaTestUtils.consumerProps("group1", "true", embeddedKafkaBroker));
-        consumer = new DefaultKafkaConsumerFactory<>(configs, new IntegerDeserializer(), new StringDeserializer()).createConsumer();
+        configs.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        consumer = new DefaultKafkaConsumerFactory<>(configs, new IntegerDeserializer(), new StringDeserializer())
+                .createConsumer();
         embeddedKafkaBroker.consumeFromAllEmbeddedTopics(consumer);
     }
 
@@ -57,32 +60,26 @@ public class LibraryEventControllerTest {
     @Timeout(5)
     void postLibraryEventTest() throws InterruptedException {
         //given
-        Book book = Book.builder()
-                .bookId(123)
-                .bookAuthor("Chris Imoni")
-                .bookName("Kafka using spring boot")
-                .build();
-
-        LibraryEvent libraryEvent = LibraryEvent.builder()
-                .libraryEventId(null)
-                .book(book)
-                .build();
-
+        LibraryEvent libraryEvent = TestUtil.libraryEventRecord();
         HttpHeaders headers = new HttpHeaders();
         headers.set("content-type", MediaType.APPLICATION_JSON.toString());
-        HttpEntity<LibraryEvent> request = new HttpEntity<>(libraryEvent, headers);
+        HttpEntity<LibraryEvent> entity = new HttpEntity<>(TestUtil.libraryEventRecord(), headers);
 
         //when
-        ResponseEntity<LibraryEvent> response =  restTemplate.exchange("/api/v1/libraryevent", HttpMethod.POST, request, LibraryEvent.class);
+        ResponseEntity<LibraryEvent> response =  restTemplate
+                .exchange("/api/v1/libraryevent", HttpMethod.POST, entity, LibraryEvent.class);
 
         //then
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
-       ConsumerRecord<Integer, String> consumerRecord = KafkaTestUtils.getSingleRecord(consumer, "library-events");
+        ConsumerRecords<Integer, String> consumerRecords = KafkaTestUtils.getRecords(consumer);
        //Thread.sleep(3000);
-       String expectedValue = "{\"libraryEventId\":null,\"libraryEventType\":\"NEW\",\"book\":{\"bookId\":123,\"bookName\":\"Kafka using spring boot\",\"bookAuthor\":\"Chris Imoni\"}}";
-       String value = consumerRecord.value();
-       assertEquals(expectedValue, value);
+        assert consumerRecords.count() == 1;
+        consumerRecords.forEach(record -> {
+            var libraryEventActual = TestUtil.parseLibraryEventRecord(objectMapper, record.value());
+            assertEquals(libraryEvent, libraryEventActual);
+
+        });
 
     }
 }

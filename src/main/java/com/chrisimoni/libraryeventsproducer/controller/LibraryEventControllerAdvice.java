@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class LibraryEventControllerAdvice {
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleRequestBody(MethodArgumentNotValidException ex) {
+    public ResponseEntity<?> handleRequestException(MethodArgumentNotValidException ex) {
         List<FieldError> errorList = ex.getBindingResult().getFieldErrors();
         String errorMessage = errorList.stream()
                 .map(fieldError -> fieldError.getField() + " - " + fieldError.getDefaultMessage())

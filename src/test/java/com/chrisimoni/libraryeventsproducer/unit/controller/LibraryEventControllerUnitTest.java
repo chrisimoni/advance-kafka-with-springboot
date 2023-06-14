@@ -4,6 +4,7 @@ import com.chrisimoni.libraryeventsproducer.controller.LibraryEventController;
 import com.chrisimoni.libraryeventsproducer.domain.Book;
 import com.chrisimoni.libraryeventsproducer.domain.LibraryEvent;
 import com.chrisimoni.libraryeventsproducer.producer.LibraryEventProducer;
+import com.chrisimoni.libraryeventsproducer.util.TestUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -34,21 +35,11 @@ public class LibraryEventControllerUnitTest {
     @Test
     void postLibraryEvent() throws Exception {
         //given
-        Book book = Book.builder()
-                .bookId(123)
-                .bookAuthor("Chris Imoni")
-                .bookName("Kafka using spring boot")
-                .build();
-
-        LibraryEvent libraryEvent = LibraryEvent.builder()
-                .libraryEventId(null)
-                .book(book)
-                .build();
+        String json = objectMapper.writeValueAsString(TestUtil.libraryEventRecord());
 
         when(libraryEventProducer.sendLibraryEvent2(isA(LibraryEvent.class))).thenReturn(null);
 
         //when
-        String json = objectMapper.writeValueAsString(libraryEvent);
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/v1/libraryevent")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -59,20 +50,11 @@ public class LibraryEventControllerUnitTest {
     @Test
     void postLibraryEvent_4xx() throws Exception {
         //given
-        Book book = Book.builder()
-                .bookId(null)
-                .bookAuthor(null)
-                .bookName("Kafka using spring boot")
-                .build();
-        LibraryEvent libraryEvent = LibraryEvent.builder()
-                .libraryEventId(null)
-                .book(book)
-                .build();
-
+        LibraryEvent libraryEvent = TestUtil.libraryEventRecordWithInvalidBook();
         String json = objectMapper.writeValueAsString(libraryEvent);
         when(libraryEventProducer.sendLibraryEvent2(isA(LibraryEvent.class))).thenReturn(null);
 
-        String expectedErrorMessage = "book.bookAuthor - must not be blank, book.bookId - must not be null";
+        String expectedErrorMessage = "book.bookId - must not be null, book.bookName - must not be blank";
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/v1/libraryevent")
                         .contentType(MediaType.APPLICATION_JSON)
