@@ -9,10 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -28,5 +25,27 @@ public class LibraryEventController {
         libraryEventProducer.sendLibraryEvent2(libraryEvent);
         log.info("After sendLibraryEvent");
         return ResponseEntity.status(HttpStatus.CREATED).body(libraryEvent);
+    }
+
+    @PutMapping("/libraryevent")
+    public ResponseEntity<?> updateLibraryEvent(@RequestBody @Valid LibraryEvent libraryEvent) throws JsonProcessingException {
+        ResponseEntity<String> validation = validateLibraryEvent(libraryEvent);
+        if (validation != null) return validation;
+        //invoke kafka producer
+        log.info("Before sendLibraryEvent");
+        libraryEventProducer.sendLibraryEvent2(libraryEvent);
+        log.info("After sendLibraryEvent");
+        return ResponseEntity.status(HttpStatus.OK).body(libraryEvent);
+    }
+
+    private static ResponseEntity<String> validateLibraryEvent(LibraryEvent libraryEvent) {
+        if(libraryEvent.libraryEventId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("libraryEventId is required");
+        }
+
+        if(!libraryEvent.libraryEventType().equals(LibraryEventType.UPDATE)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Only UPDATE event type is supported");
+        }
+        return null;
     }
 }

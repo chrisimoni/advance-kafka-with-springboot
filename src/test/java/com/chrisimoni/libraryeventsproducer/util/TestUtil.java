@@ -42,9 +42,7 @@ public class TestUtil {
     }
 
     public static LibraryEvent libraryEventRecordUpdateWithNullLibraryEventId(){
-
-        return
-                new LibraryEvent(null,
+        return new LibraryEvent(null,
                         LibraryEventType.UPDATE,
                         bookRecord());
     }
