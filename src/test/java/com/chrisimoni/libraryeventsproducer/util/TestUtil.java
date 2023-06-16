@@ -9,50 +9,59 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class TestUtil {
     public static Book bookRecord(){
 
-        return new Book(123, "Dilip","Kafka Using Spring Boot" );
+        return Book.builder()
+                .bookId(123)
+                .bookAuthor("Chris Imoni")
+                .bookName("Kafka Using Spring Boot")
+                .build();
     }
 
     public static Book bookRecordWithInvalidValues(){
-
-        return new Book(null, "","Kafka Using Spring Boot" );
+        return Book.builder()
+                .bookId(null)
+                .bookAuthor("")
+                .bookName("Kafka Using Spring Boot")
+                .build();
     }
 
     public static LibraryEvent libraryEventRecord(){
-
-        return
-                new LibraryEvent(null,
-                        LibraryEventType.NEW,
-                        bookRecord());
+        return LibraryEvent.builder()
+                .libraryEventId(null)
+                .libraryEventType(LibraryEventType.NEW)
+                .book(bookRecord())
+                .build();
     }
 
     public static LibraryEvent newLibraryEventRecordWithLibraryEventId(){
-
-        return
-                new LibraryEvent(123,
-                        LibraryEventType.NEW,
-                        bookRecord());
+        return LibraryEvent.builder()
+                .libraryEventId(123)
+                .libraryEventType(LibraryEventType.NEW)
+                .book(bookRecord())
+                .build();
     }
 
     public static LibraryEvent libraryEventRecordUpdate(){
-
-        return
-                new LibraryEvent(123,
-                        LibraryEventType.UPDATE,
-                        bookRecord());
+        return LibraryEvent.builder()
+                .libraryEventId(123)
+                .libraryEventType(LibraryEventType.UPDATE)
+                .book(bookRecord())
+                .build();
     }
 
     public static LibraryEvent libraryEventRecordUpdateWithNullLibraryEventId(){
-        return new LibraryEvent(null,
-                        LibraryEventType.UPDATE,
-                        bookRecord());
+        return LibraryEvent.builder()
+                .libraryEventId(null)
+                .libraryEventType(LibraryEventType.UPDATE)
+                .book(bookRecord())
+                .build();
     }
 
     public static LibraryEvent libraryEventRecordWithInvalidBook(){
-
-        return
-                new LibraryEvent(null,
-                        LibraryEventType.NEW,
-                        bookRecordWithInvalidValues());
+        return LibraryEvent.builder()
+                .libraryEventId(null)
+                .libraryEventType(LibraryEventType.NEW)
+                .book(bookRecordWithInvalidValues())
+                .build();
     }
 
     public static LibraryEvent parseLibraryEventRecord(ObjectMapper objectMapper , String json){

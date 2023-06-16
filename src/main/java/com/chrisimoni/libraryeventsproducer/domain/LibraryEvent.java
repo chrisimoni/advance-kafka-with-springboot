@@ -1,13 +1,23 @@
 package com.chrisimoni.libraryeventsproducer.domain;
 
+import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
-public record LibraryEvent(
-        Integer libraryEventId,
-        LibraryEventType libraryEventType,
+@Entity
+@Table(name = "library_events")
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+@Builder
+public class LibraryEvent {
+        @Id
+        private Integer libraryEventId;
+        private LibraryEventType libraryEventType;
         @NotNull
         @Valid
-        Book book
-) {
+        @OneToOne(mappedBy = "libraryEvent", cascade = {CascadeType.ALL})
+        @ToString.Exclude
+        private Book book;
 }

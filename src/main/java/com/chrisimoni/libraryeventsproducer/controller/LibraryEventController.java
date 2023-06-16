@@ -39,11 +39,11 @@ public class LibraryEventController {
     }
 
     private static ResponseEntity<String> validateLibraryEvent(LibraryEvent libraryEvent) {
-        if(libraryEvent.libraryEventId() == null) {
+        if(libraryEvent.getLibraryEventId() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("libraryEventId is required");
         }
 
-        if(!libraryEvent.libraryEventType().equals(LibraryEventType.UPDATE)) {
+        if(!libraryEvent.getLibraryEventType().equals(LibraryEventType.UPDATE)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Only UPDATE event type is supported");
         }
         return null;
