@@ -63,7 +63,6 @@ public class TestUtil {
                 .book(bookRecordWithInvalidValues())
                 .build();
     }
-
     public static LibraryEvent parseLibraryEventRecord(ObjectMapper objectMapper , String json){
 
         try {

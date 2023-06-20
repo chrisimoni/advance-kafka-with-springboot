@@ -13,7 +13,9 @@ import lombok.*;
 @Builder
 public class LibraryEvent {
         @Id
+        @GeneratedValue
         private Integer libraryEventId;
+        @Enumerated(EnumType.STRING)
         private LibraryEventType libraryEventType;
         @NotNull
         @Valid
