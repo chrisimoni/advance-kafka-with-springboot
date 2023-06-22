@@ -191,9 +191,9 @@ public class LibraryEventsConsumerIntegrationTest {
         System.out.println("consumer Record in deadletter topic : " + consumerRecord.value());
 
         assertEquals(json, consumerRecord.value());
-//        consumerRecord.headers()
-//                .forEach(header -> {
-//                    System.out.println("Header Key : " + header.key() + ", Header Value : " + new String(header.value()));
-//                });
+        consumerRecord.headers()
+                .forEach(header -> {
+                    System.out.println("Header Key : " + header.key() + ", Header Value : " + new String(header.value()));
+                });
     }
 }
