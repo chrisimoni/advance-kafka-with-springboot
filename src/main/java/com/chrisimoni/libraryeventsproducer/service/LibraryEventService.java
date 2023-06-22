@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -21,6 +22,12 @@ public class LibraryEventService {
     public void processLibraryEvent(ConsumerRecord<Integer, String> consumerRecord) throws JsonProcessingException {
         LibraryEvent libraryEvent = objectMapper.readValue(consumerRecord.value(), LibraryEvent.class);
         log.info("libraryEven : {} ", libraryEvent);
+
+        //Doesn't make sense right? Yes, this is just to test how to work with consumer retires and
+        //allow certain exceptions
+        if(libraryEvent.getLibraryEventId()!=null && ( libraryEvent.getLibraryEventId()==999 )){
+            throw new RecoverableDataAccessException("Temporary Network Issue");
+        }
 
         switch (libraryEvent.getLibraryEventType()) {
             case NEW:
