@@ -26,3 +26,7 @@ spring:
   h2:
     console:
       enabled: true
+
+topics:
+  retry: library-events.RETRY
+  dlt: library-events.DLT
