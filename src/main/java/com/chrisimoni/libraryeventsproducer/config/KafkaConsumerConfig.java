@@ -28,6 +28,7 @@ import java.util.List;
 public class KafkaConsumerConfig {
     public static final String RETRY = "RETRY";
     public static final String DEAD = "DEAD";
+    public static final String SUCCESS = "SUCCESS";
 
     @Autowired
     KafkaTemplate kafkaTemplate;
