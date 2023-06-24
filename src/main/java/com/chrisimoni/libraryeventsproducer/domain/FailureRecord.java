@@ -21,7 +21,7 @@ public class FailureRecord {
     @GeneratedValue
     private Integer id;
     private String topic;
-    private Integer key;
+    private Integer key_value;
     private String errorRecord;
     private Integer partition;
     private Long offset_value;
