@@ -1,6 +1,8 @@
 package com.chrisimoni.libraryeventsproducer.config;
 
+import com.chrisimoni.libraryeventsproducer.service.FailureRecordService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +14,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.ConsumerRecordRecoverer;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
@@ -23,6 +26,8 @@ import java.util.List;
 @EnableKafka
 @Slf4j
 public class KafkaConsumerConfig {
+    public static final String RETRY = "RETRY";
+    public static final String DEAD = "DEAD";
 
     @Autowired
     KafkaTemplate kafkaTemplate;
@@ -30,6 +35,9 @@ public class KafkaConsumerConfig {
     private String retryTopic;
     @Value("${topics.dlt}")
     private String deadLetterTopic;
+
+    @Autowired
+    private FailureRecordService failureRecordService;
 
     public DeadLetterPublishingRecoverer publishingRecoverer() {
 
@@ -47,6 +55,21 @@ public class KafkaConsumerConfig {
         return recoverer;
 
     }
+
+    ConsumerRecordRecoverer consumerRecordRecoverer = (consumerRecord, exception) -> {
+        log.error("Exception is : {} Failed Record : {} ", exception, consumerRecord);
+        var record = (ConsumerRecord<Integer, String>) consumerRecord;
+        if (exception.getCause() instanceof RecoverableDataAccessException) {
+            log.info("Inside the recoverable logic");
+            //recovery logic
+            failureRecordService.saveFailedRecord(record, exception, RETRY);
+
+        } else {
+            log.info("Inside the non recoverable logic");
+            failureRecordService.saveFailedRecord(record, exception, DEAD);
+
+        }
+    };
     public DefaultErrorHandler errorHandler() {
         FixedBackOff fixedBackOff = new FixedBackOff(1000L, 2);
 
@@ -58,9 +81,10 @@ public class KafkaConsumerConfig {
 
 
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
-                publishingRecoverer(),
-                fixedBackOff
-                //expBackOff
+                //publishingRecoverer(),
+                consumerRecordRecoverer,
+                //fixedBackOff
+                expBackOff
         );
 
         //Ignore certain exceptions

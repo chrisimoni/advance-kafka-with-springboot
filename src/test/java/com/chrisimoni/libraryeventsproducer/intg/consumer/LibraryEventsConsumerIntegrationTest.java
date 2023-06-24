@@ -4,6 +4,7 @@ import com.chrisimoni.libraryeventsproducer.consumer.LibraryEventConsumer;
 import com.chrisimoni.libraryeventsproducer.domain.Book;
 import com.chrisimoni.libraryeventsproducer.domain.LibraryEvent;
 import com.chrisimoni.libraryeventsproducer.domain.LibraryEventType;
+import com.chrisimoni.libraryeventsproducer.repository.FailureRecordRepository;
 import com.chrisimoni.libraryeventsproducer.repository.LibraryEventRepository;
 import com.chrisimoni.libraryeventsproducer.service.LibraryEventService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -77,6 +78,8 @@ public class LibraryEventsConsumerIntegrationTest {
     private String deadLetterTopic;
 
     private Consumer<Integer, String> consumer;
+    @Autowired
+    private FailureRecordRepository failureRecordRepository;
 
     @BeforeEach
     void setUp() {
@@ -215,6 +218,26 @@ public class LibraryEventsConsumerIntegrationTest {
         consumerRecord.headers()
                 .forEach(header -> {
                     System.out.println("Header Key : " + header.key() + ", Header Value : " + new String(header.value()));
+                });
+    }
+
+    @Test
+    void publishUpdateLibraryEvent_Null_LibraryEvent_failurerecord() throws ExecutionException, InterruptedException, JsonProcessingException {
+        Integer libraryEventId = null;
+        String json = "{\"libraryEventId\":" + libraryEventId + ",\"libraryEventType\":\"UPDATE\",\"book\":{\"bookId\":456,\"bookName\":\"Kafka Using Spring Boot\",\"bookAuthor\":\"Dilip\"}}";
+        kafkaTemplate.send("library-events", json).get();
+
+        CountDownLatch latch = new CountDownLatch(1);
+        latch.await(5, TimeUnit.SECONDS);
+
+        verify(libraryEventsConsumerSpy, times(1)).onMessage(isA(ConsumerRecord.class));
+        verify(libraryEventsServiceSpy, times(1)).processLibraryEvent(isA(ConsumerRecord.class));
+
+        long count = failureRecordRepository.count();
+        assertEquals(1, count);
+        failureRecordRepository.findAll()
+                .forEach(failureRecord -> {
+                    System.out.println("failureReord: " +failureRecord);
                 });
     }
 }
