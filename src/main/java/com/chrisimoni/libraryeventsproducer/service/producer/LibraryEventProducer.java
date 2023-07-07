@@ -1,4 +1,4 @@
-package com.chrisimoni.libraryeventsproducer.producer;
+package com.chrisimoni.libraryeventsproducer.service.producer;
 
 import com.chrisimoni.libraryeventsproducer.domain.LibraryEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;

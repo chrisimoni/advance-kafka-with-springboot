@@ -1,6 +1,6 @@
 package com.chrisimoni.libraryeventsproducer.intg.consumer;
 
-import com.chrisimoni.libraryeventsproducer.consumer.LibraryEventConsumer;
+import com.chrisimoni.libraryeventsproducer.service.consumer.LibraryEventConsumer;
 import com.chrisimoni.libraryeventsproducer.domain.Book;
 import com.chrisimoni.libraryeventsproducer.domain.LibraryEvent;
 import com.chrisimoni.libraryeventsproducer.domain.LibraryEventType;

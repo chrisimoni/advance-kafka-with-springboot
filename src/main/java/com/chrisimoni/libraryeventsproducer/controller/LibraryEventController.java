@@ -2,7 +2,7 @@ package com.chrisimoni.libraryeventsproducer.controller;
 
 import com.chrisimoni.libraryeventsproducer.domain.LibraryEvent;
 import com.chrisimoni.libraryeventsproducer.domain.LibraryEventType;
-import com.chrisimoni.libraryeventsproducer.producer.LibraryEventProducer;
+import com.chrisimoni.libraryeventsproducer.service.LibraryEventService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,29 +12,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/libraryevent")
 @RequiredArgsConstructor
 @Slf4j
 public class LibraryEventController {
-    private final LibraryEventProducer libraryEventProducer;
+    private final LibraryEventService libraryEventService;
 
-    @PostMapping("/libraryevent")
+    @PostMapping()
     public ResponseEntity<LibraryEvent> postLibraryEvent(@RequestBody @Valid LibraryEvent libraryEvent) throws JsonProcessingException {
-        //invoke kafka producer
-        log.info("Before sendLibraryEvent");
-        libraryEventProducer.sendLibraryEvent2(libraryEvent);
-        log.info("After sendLibraryEvent");
+        libraryEventService.sendLibraryEvent(libraryEvent);
         return ResponseEntity.status(HttpStatus.CREATED).body(libraryEvent);
     }
 
-    @PutMapping("/libraryevent")
+    @PutMapping
     public ResponseEntity<?> updateLibraryEvent(@RequestBody @Valid LibraryEvent libraryEvent) throws JsonProcessingException {
         ResponseEntity<String> validation = validateLibraryEvent(libraryEvent);
         if (validation != null) return validation;
-        //invoke kafka producer
-        log.info("Before sendLibraryEvent");
-        libraryEventProducer.sendLibraryEvent2(libraryEvent);
-        log.info("After sendLibraryEvent");
+
+        libraryEventService.updateLibraryEvent(libraryEvent);
+
         return ResponseEntity.status(HttpStatus.OK).body(libraryEvent);
     }
 

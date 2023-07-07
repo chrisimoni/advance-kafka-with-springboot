@@ -2,6 +2,7 @@ package com.chrisimoni.libraryeventsproducer.service;
 
 import com.chrisimoni.libraryeventsproducer.domain.LibraryEvent;
 import com.chrisimoni.libraryeventsproducer.repository.LibraryEventRepository;
+import com.chrisimoni.libraryeventsproducer.service.producer.LibraryEventProducer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.Optional;
 public class LibraryEventService {
     private final ObjectMapper objectMapper;
     private final LibraryEventRepository libraryEventRepository;
+    private final LibraryEventProducer libraryEventProducer;
 
     public void processLibraryEvent(ConsumerRecord<Integer, String> consumerRecord) throws JsonProcessingException {
         LibraryEvent libraryEvent = objectMapper.readValue(consumerRecord.value(), LibraryEvent.class);
@@ -62,5 +64,19 @@ public class LibraryEventService {
         }
 
         log.info("validation is successful for the library event {} ", optionalLibraryEvent.get());
+    }
+
+    public void sendLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
+        //invoke kafka producer
+        log.info("Before sendLibraryEvent");
+        libraryEventProducer.sendLibraryEvent2(libraryEvent);
+        log.info("After sendLibraryEvent");
+    }
+
+    public void updateLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
+        //invoke kafka producer
+        log.info("Before sendLibraryEvent");
+        libraryEventProducer.sendLibraryEvent2(libraryEvent);
+        log.info("After sendLibraryEvent");
     }
 }
