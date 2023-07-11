@@ -1,6 +1,7 @@
 spring:
   kafka:
     topic: library-events
+    new-event-topic: new-library-events
     producer:
       bootstrap-servers: localhost:9092
       key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
